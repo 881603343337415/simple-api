@@ -2,14 +2,16 @@ name: Deploy simple-api
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.5.4
@@ -20,19 +22,16 @@ jobs:
         run: ssh-add -l
 
       - name: Test SSH connection 👀
-        run: |
-          ssh -o StrictHostKeyChecking=no -v \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            exit
+        run: ssh -o StrictHostKeyChecking=no -v ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} exit
 
-     - name: Deploy na EC2 🚀
-     run: |
-       ssh -o StrictHostKeyChecking=no \
-         -i ~/.ssh/id_rsa \
-         ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-         "cd /dev/simple-api/simple-api && \
-          git config --global --add safe.directory /dev/simple-api/simple-api && \
-          sudo docker system prune -af && \
-          sudo docker-compose down && \
-          sudo docker-compose up -d --build"
+      - name: Deploy na EC2 🚀
+        run: |
+          ssh -o StrictHostKeyChecking=no \
+            -i ~/.ssh/id_rsa \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "cd /dev/simple-api/simple-api && \
+             git config --global --add safe.directory /dev/simple-api/simple-api && \
+             sudo docker system prune -af && \
+             sudo docker-compose down && \
+             sudo docker-compose up -d --build"
 
