@@ -107,3 +107,4 @@ dist
 *.tfstate
 *.tfstate.*
 .terraform.lock.hcl
+.env
