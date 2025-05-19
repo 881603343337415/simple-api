@@ -18,14 +18,20 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
+      - name: List SSH keys in agent 🔑
+        run: ssh-add -l
+
+      - name: Test SSH connection 👀
+        run: ssh -o StrictHostKeyChecking=no -v ubuntu@${{ secrets.EC2_HOST }} exit
+
       - name: Deploy na EC2 🚀
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-sudo chown -R ubuntu:ubuntu /dev/simple-api
-cd /dev/simple-api/simple-api
-git pull
-git config --add safe.directory /dev/simple-api/simple-api
-sudo docker system prune -af
-sudo docker-compose down
-sudo docker-compose up -d --build
-EOF
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} '
+            sudo chown -R ubuntu:ubuntu /dev/simple-api &&
+            cd /dev/simple-api/simple-api &&
+            git pull &&
+            git config --add safe.directory /dev/simple-api/simple-api &&
+            sudo docker system prune -af &&
+            sudo docker-compose down &&
+            sudo docker-compose up -d --build
+          '
