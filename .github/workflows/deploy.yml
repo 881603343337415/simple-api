@@ -1,19 +1,45 @@
-n      - name: Deploy na EC2 🚀
+name: Deploy simple-api
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: List SSH keys in agent 🔑
+        run: ssh-add -l
+
+      - name: Test SSH connection 👀
+        run: ssh -o StrictHostKeyChecking=no -v ubuntu@${{ secrets.EC2_HOST }} exit
+
+      - name: Deploy na EC2 🚀
         run: |
-          # 1) Ajustar permissões da pasta antes do sync
+          # Ajusta dono para permitir escrita
           ssh -o StrictHostKeyChecking=no \
             -i ~/.ssh/id_rsa \
             ubuntu@${{ secrets.EC2_HOST }} \
             "sudo chown -R ubuntu:ubuntu /dev/simple-api"
 
-          # 2) Sincronizar código via rsync rodando como sudo no destino
+          # Sincroniza código com sudo no destino
           rsync -avz --delete \
             -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
             --rsync-path="sudo rsync" \
             $GITHUB_WORKSPACE/ \
             ubuntu@${{ secrets.EC2_HOST }}:/dev/simple-api/simple-api/
 
-          # 3) Rodar deploy remoto
+          # Roda deploy: limpa, desce e sobe containers
           ssh -o StrictHostKeyChecking=no \
             -i ~/.ssh/id_rsa \
             ubuntu@${{ secrets.EC2_HOST }} \
